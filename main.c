@@ -3,9 +3,7 @@
 
 int main(int argc, char const *argv[])
 {
-    
-    funcManu();             //功能菜单
-    // printf("ok!\n");
-    //choiseFunc();           //选择功能
+    /* 打开通讯录 */
+    funcManu();
     return 0;
 }

@@ -3,22 +3,37 @@
 #include <unistd.h>
 #include "addressBook.h"
 
+#define ZERO                 0     //表示0
+
 #define DEEPCOLOUR           0    //通讯录不为空，2、3、4选项颜色与其他颜色相同
 #define LIGHTCOLOUR          2    //通讯录为空，2、3、4选项颜色变浅
 
 #define FIRST                0    //第一次进入通讯录菜单
 #define NOFIRST              1    //第二次进入通讯录菜单
 
-#define ADDCONTACTS         '1'    //新增联系人
-#define SEARCHCONTACTS      '2'    //查找联系人
-#define DELECONTACTS        '3'    //删除联系人
-#define CHANGECONTACTS      '4'    //修改联系人
-#define EXITPROCEDURE       '5'    //退出程序
+/* 第几行 */
+#define ROWONE               1
+#define ROWTWO               2
+#define ROWTHREE             3
+#define ROWFOUR              4
+#define ROWFIVE              5
 
-int nums = 0;
+/* 功能选项 */
+#define ADDCONTACTS          1    //新增联系人
+#define SEARCHCONTACTS       2    //查找联系人
+#define DELECONTACTS         3    //删除联系人
+#define CHANGECONTACTS       4    //修改联系人
+#define EXITPROCEDURE        5    //退出程序
+
 
 /* 初次进入通讯录标记 */
-int enter = FIRST; 
+int openManu = FIRST;
+
+/* 全局索引位置 */
+int pos = ZERO;
+
+
+int memberSize = ZERO;
 
 /* 联系人排序方式 */
 int compare()
@@ -37,7 +52,7 @@ int contactsPrint()
 //处理输入缓存区的垃圾字符，防止用户输入非法值
 void clearBuffer()      
 {
-    char ch = 0;
+    char ch = ZERO;
     while (ch = getchar() != '\n' && ch != EOF);   
 }
 
@@ -57,6 +72,10 @@ int printspace(int line)
     }
     return 0;
 }
+
+
+
+
 
 /* 新增联系人成功界面 */
 void newSuccessfullyAdded()
@@ -142,8 +161,8 @@ void IsEmptyAddressBook()
     funcManu(); 
 }
 
-/* 是否退出？ */
-int ConfirmExit()
+/* 是否退出? */
+void ConfirmExit()
 {
     system("clear");//清屏
     print_();
@@ -154,12 +173,10 @@ int ConfirmExit()
     printf("\033[0;0;0m\n");
 
     printf("输入(1退出,其余输入返回菜单):\t");
-
-    return 0;
 }
 
 /* 退出通讯录成功界面 */
-int exitSuccessful()
+void exitSuccessful()
 {
     system("clear");//清屏
     print_();
@@ -169,7 +186,6 @@ int exitSuccessful()
     print_();
     printf("\033[0;0;0m\n");
     exit(0);
-    return 0;
 }
 
 void PowerOnAnimation()   //开机动画
@@ -210,11 +226,6 @@ void PowerOnAnimation()   //开机动画
     sleep(1.5);
 }
 
-/* 选项字体类型选择 */
-int numsIsEmpty(int nums)
-{
-    return nums == 0 ? LIGHTCOLOUR : DEEPCOLOUR;
-}
 
 //当输入了非选项值时的提示信息显示
 int illegalInputDisplay()   
@@ -230,29 +241,118 @@ int illegalInputDisplay()
     sleep(1.7);
 }
 
-int choiseFunc()    //选择功能
+int getPos()    //选择行数
 {
-    char choise = 0;
-    int ch = 0;
+    int ch = ZERO;
+    char tmp = ZERO;
 
-    while (1)
+        while(1)
+        {
+            scanf("%c", &tmp);
+            while((ch = getchar()) != '\n');
+
+            if(tmp == '\n')/* 只输入换行直接确认 */
+            {
+                return pos;
+            }
+            else if(tmp == 'w')
+            {
+                if(pos == 0)
+                {
+                    pos = 4;
+                }
+                else
+                {
+                    pos -= 1;
+                }
+                /* 刷新功能选择界面 */
+                funcManuPrint(); 
+            }
+            else if(tmp == 's')
+            {
+                pos += 1;
+                funcManuPrint();
+            }
+        }
+
+    return pos;
+}
+
+/* 判断是否是此行 */
+int IsTheRow(int Row)
+{
+    int tmpPos = getPos();
+    int tmpRow = determineRow(tmpPos);
+    return (Row == tmpRow) ?  DEEPCOLOUR : LIGHTCOLOUR; 
+}
+
+/* 刷新行数 */
+int determineRow(int Pos)
+{
+    int row = (Pos % 5) + 1;
+    return row;
+}
+
+/* 打印功能选择界面 */
+int funcManuPrint()
+{
+    system("clear");
+    print_();
+    printspace(1);
+    printf("\033[0;30;47m\t|  请输入功能选项  |\n");
+    printspace(1);
+    /* |边框和文字分开配置，不一起变色 */    
+    printf("\t|\033[%d;30;47m   1.新增联系人   \033[0;30;47m|\n", IsTheRow(ROWONE));
+    printf("\t|\033[%d;30;47m   2.查找联系人   \033[0;30;47m|\n", IsTheRow(ROWTWO));
+    printf("\t|\033[%d;30;47m   3.删除联系人   \033[0;30;47m|\n", IsTheRow(ROWTHREE));
+    printf("\t|\033[%d;30;47m   4.修改联系人   \033[0;30;47m|\n", IsTheRow(ROWFOUR));
+    printf("\t|\033[%d;30;47m   5.退出通讯录   \033[0;30;47m|\n", IsTheRow(ROWFIVE));
+    printspace(1);
+    print_();
+    printf("\t\033[0;0;0m\n");//重置文本属性为默认属性
+    printf("输入:\t");
+
+    return 0;
+}
+
+/* 功能菜单入口函数 */
+int funcManu()      
+{
+    if (openManu == FIRST)
     {
-        scanf("%c", &choise);/* 读取缓存区一个字符到choice中 */
-        while ((ch = getchar()) != '\n');/* 当输入一串字符串时，清空缓存区多余字符 */
-
-        if (choise < '1' || choise > '5')
-        {
-            illegalInputDisplay();
-            printf("\t\033[0;0;0m\n");
-            funcManu();
-            continue;
-        }
-        else
-        {
-            break;
-        }
+        openManu = NOFIRST;    //修改enter标记为非第一次进入
+        PowerOnAnimation();     //开机动画
     }
-    switch (choise)
+
+    system("clear");
+    print_();
+    printspace(1);
+    printf("\033[0;30;47m\t|  请输入功能选项  |\n");
+    printspace(1);
+    /* |边框和文字分开配置，不一起变色 */    
+    printf("\t|\033[%d;30;47m   1.新增联系人   \033[0;30;47m|\n", IsTheRow(ROWONE));
+    printf("\t|\033[%d;30;47m   2.查找联系人   \033[0;30;47m|\n", IsTheRow(ROWTWO));
+    printf("\t|\033[%d;30;47m   3.删除联系人   \033[0;30;47m|\n", IsTheRow(ROWTHREE));
+    printf("\t|\033[%d;30;47m   4.修改联系人   \033[0;30;47m|\n", IsTheRow(ROWFOUR));
+    printf("\t|\033[%d;30;47m   5.退出通讯录   \033[0;30;47m|\n", IsTheRow(ROWFIVE));
+    printspace(1);
+    print_();
+    printf("\t\033[0;0;0m\n");//重置文本属性为默认属性
+    printf("输入:\t");
+
+    /* 进入功能菜单后调用功能选择函数 */
+    choiseFunc();
+
+    return 0;
+}
+
+
+int choiseFunc()
+{
+    int tmpPos = determineRow(pos);
+
+    
+    switch (tmpPos)
     {   
         case ADDCONTACTS:/* 新增联系人 */
         {
@@ -262,7 +362,7 @@ int choiseFunc()    //选择功能
 
         case SEARCHCONTACTS:/* 查找联系人 */
         {
-            if(nums == 0)
+            if(memberSize == ZERO)
             {
                 /* 提示通讯录为为空 */
                 IsEmptyAddressBook();
@@ -279,7 +379,7 @@ int choiseFunc()    //选择功能
          
         case DELECONTACTS:/* 删除联系人 */   
         {
-            if(nums == 0)
+            if(memberSize == ZERO)
             {
                 /* 提示通讯录为为空 */
                 IsEmptyAddressBook();
@@ -296,7 +396,7 @@ int choiseFunc()    //选择功能
         
         case CHANGECONTACTS:/* 修改联系人*/
         {
-            if(nums == 0)
+            if(memberSize == ZERO)
             {
                 /* 提示通讯录为为空 */
                 IsEmptyAddressBook();
@@ -313,7 +413,7 @@ int choiseFunc()    //选择功能
         case EXITPROCEDURE:/* 退出程序 */
         {
             ConfirmExit();
-            char determine = 0;
+            char determine = ZERO;
             scanf("%c", &determine);
             if(determine == '1')
             {
@@ -331,35 +431,3 @@ int choiseFunc()    //选择功能
         }
     }
 }
-
-int funcManu()      //功能菜单入口函数
-{
-    if (enter == FIRST)
-    {
-        enter = NOFIRST;    //修改enter标记为非第一次进入
-        PowerOnAnimation();     //开机动画
-    }
-
-    system("clear");
-    print_();
-    printspace(1);
-    printf("\033[0;30;47m\t|  请输入功能选项  |\n");
-    printspace(1);
-    printf("\033[0;30;47m\t|   1.新增联系人   |\n");
-    /* |边框和文字分开配置，不一起变色 */
-    printf("\t|\033[%d;30;47m   2.查找联系人   \033[0;30;47m|\n", numsIsEmpty(nums));
-    printf("\t|\033[%d;30;47m   3.删除联系人   \033[0;30;47m|\n", numsIsEmpty(nums));
-    printf("\t|\033[%d;30;47m   4.修改联系人   \033[0;30;47m|\n", numsIsEmpty(nums));
-    printf("\033[0;30;47m\t|   5.退出通讯录   |\n");
-    printspace(1);
-    print_();
-    printf("\t\033[0;0;0m\n");//重置文本属性为默认属性
-    printf("输入:\t");
-
-    /* 进入功能菜单后调用功能选择函数 */
-    choiseFunc();
-
-    return 0;
-}
-
-
