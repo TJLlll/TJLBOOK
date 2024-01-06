@@ -283,9 +283,10 @@ static int illegalInputDisplay()
     printspace(2);
     printf("\033[0;30;47m\t|    输入错误！    |\n");
     printspace(2);
-    printf("\033[0;30;47m\t| 请输入正确的编号 |\n");
+    printf("\033[0;30;47m\t|   请输入w或s!    |\n");
     printspace(3);
     print_();
+    printf("\t\033[0;0;0m\n");
     sleep(1.7);
 }
 
@@ -319,6 +320,11 @@ static int getPos()    //选择行数
             else if(tmp == 's')
             {
                 pos += 1;
+                funcManuPrint();
+            }
+            else
+            {
+                illegalInputDisplay();   
                 funcManuPrint();
             }
         }
